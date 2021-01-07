@@ -11,8 +11,10 @@
 #include "ImportedModel.h"
 #include "Utils.h"
 #include <stack>
+#include <vector>
 #include "VertexBuffer.hpp"
 #include "Objeto3d.hpp"
+#include "Turret.hpp"
 using namespace std;
 
 #define numVAOs 8
@@ -113,7 +115,7 @@ void mostrar_trasladado(Objeto3d *objeto,  glm::vec3 traslado, glm::mat4 vMatAct
 }
 
 
-void display(GLFWwindow *window, double currentTime, Nave &nave)
+void display(GLFWwindow *window, double currentTime, Nave &nave , vector<Turret> &torretas)
 {
 	glClear(GL_DEPTH_BUFFER_BIT);
 	glClearColor(0.0, 0.0, 0.0, 1.0);
@@ -157,6 +159,13 @@ void display(GLFWwindow *window, double currentTime, Nave &nave)
 
 //	giros = {M_PI,0,0,0,M_PI,0,M_PI/2,0, 0 ,};
 	nave.render(currentTime , vMat ,  mvLoc  ,vao );
+
+	for (Turret &torreta : torretas)
+	{
+		torreta.render(currentTime , vMat , mvLoc , vao);
+	}
+	
+
 	for (int i = -10; i < 10; i++){
 		for (int j =-10; j < 10; j++)
 			mostrar_trasladado(&mycuadrado , {(float)i,0 ,(float)j}  , vMat , sueloTextura , vao ); 
@@ -196,12 +205,31 @@ int main(void)
 
 	Nave myNave = Nave(vao);
 
+	vector<Objeto3d> modelosTorretas= {
+        Objeto3d(vao, "../modelos-comprobados/turret2.obj"),
+        Objeto3d(vao, "../modelos-comprobados/turret0.obj"),
+        Objeto3d(vao, "../modelos-comprobados/turret1.obj"),
+	};
+
+	vector <GLuint> texturasTorretas = {
+		Utils::loadTexture("../modelos-comprobados/turret2.jpg"),
+		Utils::loadTexture("../modelos-comprobados/turret0.jpg"),
+		Utils::loadTexture("../modelos-comprobados/turret1.jpg"),
+	};
+
+	vector<Turret> torretas ={
+		Turret(vao , {2,0,2} , Turret::tipo::Turret0 , &modelosTorretas[0],texturasTorretas[0] ),
+		Turret(vao , {3,0,-2} , Turret::tipo::Turret1 , &modelosTorretas[1],texturasTorretas[1] ),
+		Turret(vao , {-2,0,2} , Turret::tipo::Turret2 , &modelosTorretas[2],texturasTorretas[2] ),
+	};
+
+
 	double currentTime = 0.0;
 	
 	while (!glfwWindowShouldClose(window))
 	{
 		currentTime =glfwGetTime();
-		display(window,  currentTime , myNave);
+		display(window,  currentTime , myNave , torretas);
 		glfwSwapBuffers(window);
 
 		glfwPollEvents();
