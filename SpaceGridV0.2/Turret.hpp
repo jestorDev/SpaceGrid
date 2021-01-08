@@ -12,27 +12,8 @@
 #include <glm/gtc/matrix_transform.hpp> // glm::translate, glm::rotate, glm::scale, glm::perspective
 #include <cmath>
 #include "Nave.hpp"
+#include "Proyectiles.hpp"
 
-struct Proyectil {
-    glm::vec3  pos;
-    Objeto3d * modelo;
-    GLuint textura;
-    glm::vec3  direccion;
-    glm::vec3 escalado;
-
-    void update (){ 
-        pos += direccion * 0.05f;
-    } 
-
-    void render (glm::mat4 vMatActua, GLuint mvLoc, GLuint *arrVaos){
-        update();
-        vMatActua *= glm::translate(glm::mat4(1.0f), pos + glm::vec3(-1.0 ,0.0,0.0));
-        vMatActua *= glm::scale(glm::mat4(1.0f), glm::vec3(0.1f,0.1f,0.1f));
-        modelo->draw(arrVaos, textura, mvLoc, vMatActua);
-        return;
-    }
-    
-};
 
 
 class Turret
@@ -52,25 +33,20 @@ private:
     float giroybase;
     float giroy;
     Objeto3d * modeloTorreta;
+    FactoryProyectiles * factory;
     GLuint textura;
     glm::vec3 escalamiento;
-        
-    const std::array<glm::vec3, 3> escalamientos = {
-        glm::vec3(0.3, 0.3, 0.3),
-        glm::vec3(0.04, 0.04, 0.04),
-        glm::vec3(0.03, 0.03, 0.03),
-    };
-    const std::array<double, 3> girpyIncial = {M_PI,M_PI/2.0, 0 };
-    const std::array<double, 3> frecuencia = {2.0, 4.0, 8.0};
     bool ejecutandoRotacion;
 
 public:
-    Turret(
-        GLuint *arrVaos, 
+    Turret(GLuint *arrVaos, 
         glm::vec3 posInicial, 
         Turret::tipo model , 
         Objeto3d * modeloTorreta ,
         GLuint textura , 
+        float giroybase,
+        glm::vec3 escalamiento, 
+        FactoryProyectiles * factory,
         Nave * nave);
     ~Turret();
 
@@ -100,6 +76,14 @@ public:
         
         
     }
+    glm::vec3 getPos (){
+        return pos;
+    }
+    void lanzarProyectil (){
+        glm::vec3 direccion =  glm::rotate(glm::mat4(1.0f), giroy, glm::vec3(0.0f, 1.0f, 0.0f)) * glm::vec4(0,0,1,1) ; // { sin(giroy) ,0 , cos(giroy) };
+        std::cout << direccion.x<< ' ' <<direccion.y<< ' ' <<direccion.z <<"\n " ;
+        factory->crearProyectil((unsigned)forma , glm::vec3(0,.5,0)+ pos + direccion * 0.5f, direccion);
+    }
 
 
     void render(double time, glm::mat4 vMatActua, GLuint mvLoc, GLuint *arrVaos)
@@ -107,7 +91,7 @@ public:
         actualizarAnimaciones(time);
         vMatActua *= glm::translate(glm::mat4(1.0f), pos);
         vMatActua *= glm::rotate(glm::mat4(1.0f), giroy, glm::vec3(0.0f, 1.0f, 0.0f));
-        vMatActua *= glm::scale(glm::mat4(1.0f), escalamientos[forma]);
+        vMatActua *= glm::scale(glm::mat4(1.0f), escalamiento);
         modeloTorreta->draw(arrVaos, textura, mvLoc, vMatActua);
     }
 };
@@ -117,20 +101,96 @@ Turret::Turret(GLuint *arrVaos,
         Turret::tipo model , 
         Objeto3d * modeloTorreta ,
         GLuint textura , 
-        Nave * nave)
+        float giroybase,
+        glm::vec3 escalamiento, 
+        FactoryProyectiles * factory,
+        Nave * nave
+        )
 {
     pos = posInicial;
+    
     forma = model;
-    giroybase = girpyIncial[forma];
+
+    this->giroybase = giroybase ;
+    this->factory = factory;
     giroy = giroybase;
+    
+    this->escalamiento = escalamiento;
     this->nave = nave;
     this->modeloTorreta = modeloTorreta;
     this->textura =  textura;
     std::cout << "Cargados modeloTorretas y texturas de las Turrets";
+    //lanzarProyectil();
 }
 
 Turret::~Turret()
 {
 }
+
+
+
+
+class FactoryTorretas
+{
+private:
+    Nave *punteroNave;
+    GLuint *vaoArr;
+    FactoryProyectiles * p_factory;
+    std::array<Objeto3d, 3> modelosTorretas;
+    std::array<GLuint, 3> texturasTorretas;
+    std::array<glm::vec3, 3> escalamientos = {
+        glm::vec3(0.3, 0.3, 0.3),
+        glm::vec3(0.04, 0.04, 0.04),
+        glm::vec3(0.03, 0.03, 0.03),
+    };
+    const std::array<double, 3> girpyIncial = {M_PI, M_PI / 2.0, 0};
+    const std::array<double, 3> frecuencia = {2.0, 4.0, 8.0};
+
+public:
+    FactoryTorretas(GLuint *vao, Nave *nave , FactoryProyectiles * factory)
+    {
+        punteroNave = nave;
+        //	    escalamientos = {
+        //        glm::vec3(0.3, 0.3, 0.3),
+        //        glm::vec3(0.04, 0.04, 0.04),
+        //        glm::vec3(0.03, 0.03, 0.03),
+        //    };
+        //    girpyIncial = {M_PI,M_PI/2.0, 0 };
+        p_factory = factory;
+        modelosTorretas = {
+            Objeto3d(vao, "../modelos-comprobados/turret3.obj"),
+            Objeto3d(vao, "../modelos-comprobados/turret0.obj"),
+            Objeto3d(vao, "../modelos-comprobados/turret1.obj"),
+        };
+
+        texturasTorretas = {
+            Utils::loadTexture("../modelos-comprobados/turret3.jpg"),
+            Utils::loadTexture("../modelos-comprobados/turret0.jpg"),
+            Utils::loadTexture("../modelos-comprobados/turret1.jpg"),
+        };
+
+        std::cout << "Cargados modelos y texturas de torretas";
+    }
+
+    Turret crearTorreta(
+        glm::vec3 pos,
+        Turret::tipo tipo,
+        glm::vec3 direcion = {0.0f, 0.0f, 0.0f})
+    {
+
+        std::cout << "Creado torreta tipo: " << (int)tipo << "\n";
+        return Turret(
+            vaoArr,
+            pos,
+            tipo,
+            &modelosTorretas[tipo],
+            texturasTorretas[tipo],
+            girpyIncial[tipo],
+            escalamientos[tipo],
+            p_factory,
+            punteroNave);
+    }
+};
+
 
 #endif // Turret_HH

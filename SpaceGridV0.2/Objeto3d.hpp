@@ -22,6 +22,7 @@ public:
     Objeto3d(GLuint *arrVaos, VertexBuffer puntos  ,VertexBuffer textura , int total_vertices);
     ~Objeto3d();
     void draw (GLuint *arrVaos, GLuint texura , GLuint mvLoc , glm::mat4 vMat );
+    void drawNoTexture (GLuint *arrVaos, GLuint mvLoc , glm::mat4 vMat );
 };
 
 

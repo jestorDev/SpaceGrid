@@ -11,7 +11,7 @@ ModelImporter::ModelImporter(const char *filePath) {
 }
 
 void ModelImporter::parseOBJ(const char *filePath) {
-	std::cout<< "Iniciado parseo ";
+	std::cout<< "Iniciado parseo del modelo\n";
 	float x, y, z;
 	string content;
 	ifstream fileStream(filePath, ios::in);

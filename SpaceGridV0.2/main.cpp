@@ -15,16 +15,17 @@
 #include "VertexBuffer.hpp"
 #include "Objeto3d.hpp"
 #include "Turret.hpp"
-//#include "Factorys.hpp"
+#include "Proyectiles.hpp"
 using namespace std;
 
-#define numVAOs 8
+#define numVAOs 20
 #include "Nave.hpp"
 
-struct Camera{
+struct Camera
+{
 	glm::vec3 pos;
 	glm::vec3 lookingPoint;
-}mainCam;
+} mainCam;
 
 GLuint renderingProgram;
 GLuint vao[numVAOs];
@@ -32,15 +33,16 @@ VertexBuffer cuadrado;
 
 GLuint sueloTextura;
 
-GLuint mvLoc, projLoc;
-int Objeto3d::objectCount = 0;
+bool disparar;
 
+GLuint mvLoc, projLoc,bgLoc,resLoc,timeLoc;
+int Objeto3d::objectCount = 0;
+bool primera;
 int width, height;
 float aspect;
-glm::mat4 pMat,vMat,mMat,mvMat;
+glm::mat4 pMat, vMat, mMat, mvMat;
 stack<glm::mat4> mvStack;
 Objeto3d mycuadrado;
-bool primera ;
 void bindGLTexture(GLuint texture)
 {
 	glActiveTexture(GL_TEXTURE0);
@@ -49,19 +51,38 @@ void bindGLTexture(GLuint texture)
 
 float toRadians(float degrees) { return (degrees * 2.0f * 3.14159f) / 360.0f; }
 
-
-
+bool tieneTorreta (vector<Turret> &torretas  , int i,int j){
+	for (Turret &torreta : torretas)
+	{
+		if ( glm::length(torreta.getPos() - glm::vec3((float)i, 0, (float)j)) < 0.1)
+			return true;
+	}
+	return false;
+}
 
 void setupVertices(void)
 {
 	const float sqareVertex[18] =
 		{
-			0.0f, 0.0f,0.0f, //P1
-			1.0f, 0.0f,1.0f, //P2
-			0.0f, 0.0f,1.0f, //P3
-			1.0f, 0.0f,1.0f, //P2
-			0.0f, 0.0f,0.0f, //P1
-			1.0f, 0.0f,0.0f, };
+			0.0f,
+			0.0f,
+			0.0f, //P1
+			1.0f,
+			0.0f,
+			1.0f, //P2
+			0.0f,
+			0.0f,
+			1.0f, //P3
+			1.0f,
+			0.0f,
+			1.0f, //P2
+			0.0f,
+			0.0f,
+			0.0f, //P1
+			1.0f,
+			0.0f,
+			0.0f,
+		};
 	float squareTexCoor[12] =
 		{
 			0.0f, 0.0f,
@@ -71,14 +92,14 @@ void setupVertices(void)
 			0.0f, 0.0f,
 			1.0f, 0.0f};
 
-
 	glGenVertexArrays(numVAOs, vao);
-	mycuadrado = Objeto3d(vao , VertexBuffer(sqareVertex, 18 * 4, 3, GL_FLOAT), VertexBuffer(squareTexCoor, 12 * 4, 2, GL_FLOAT), 18);
+	mycuadrado = Objeto3d(vao, VertexBuffer(sqareVertex, 18 * 4, 3, GL_FLOAT), VertexBuffer(squareTexCoor, 12 * 4, 2, GL_FLOAT), 18);
 }
 
 void init(GLFWwindow *window)
 {
 	renderingProgram = Utils::createShaderProgram("vertShader.glsl", "fragShader.glsl");
+//	backgroundrenderingProgram = Utils::createShaderProgram("vertShader.glsl", "fondo.glsl");
 
 	glfwGetFramebufferSize(window, &width, &height);
 	aspect = (float)width / (float)height;
@@ -87,61 +108,92 @@ void init(GLFWwindow *window)
 	setupVertices();
 
 	sueloTextura = Utils::loadTexture("../modelos-comprobados/suelo0.jpg");
-	mainCam.lookingPoint = glm::vec3(0.0f,0,0.0f);
- 	mainCam.pos = glm::vec3(0.0, 3.0, 5.0);
+	mainCam.lookingPoint = glm::vec3(0.0f, 0, 0.0f);
+	mainCam.pos = glm::vec3(0.0, 3.0, 5.0);
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 }
-
-
-
-void mostrar_trasladado(Objeto3d *objeto,  glm::vec3 traslado, glm::mat4 vMatActua, GLuint texture, GLuint vaos[numVAOs])
+void mostrar_fondo(Objeto3d *objeto, glm::mat4 vMatActua, GLuint vaos[numVAOs])
 {
-	const float h = 0.1 * sin(glfwGetTime() + sqrt(traslado.x*traslado.x +traslado.y*traslado.y) );
-	vMatActua *= glm::translate(glm::mat4(1.0f), traslado - glm::vec3(0.5 , h,0.5));
-	vMatActua *= glm::scale(glm::mat4(1.0f), glm::vec3(0.8,0.8,0.8));
-	objeto->draw(vaos, texture, mvLoc, vMatActua);
+	const float h = -5;
+	vMatActua *= glm::translate(glm::mat4(1.0f), glm::vec3(-200, h, -200));
+	vMatActua *= glm::scale(glm::mat4(1.0f), glm::vec3(500, 1, 500));
+	objeto->drawNoTexture(vaos, mvLoc, vMatActua);
 }
 
 
-void display(GLFWwindow *window, double currentTime, Nave &nave , vector<Turret> &torretas)
+void mostrar_trasladado(Objeto3d *objeto, glm::vec3 traslado, glm::mat4 vMatActua, GLuint texture, GLuint vaos[numVAOs])
 {
-	glClear(GL_DEPTH_BUFFER_BIT);
-	glClearColor(0.0, 0.0, 0.0, 1.0);
-	glClear(GL_COLOR_BUFFER_BIT);
+	const float h =  0;//0.1 * sin(glfwGetTime() + sqrt(traslado.x * traslado.x + traslado.y * traslado.y));
+	vMatActua *= glm::translate(glm::mat4(1.0f), traslado - glm::vec3(0.5, h, 0.5));
+	vMatActua *= glm::scale(glm::mat4(1.0f), glm::vec3(0.8, 0.8, 0.8));
+	objeto->draw(vaos, texture, mvLoc, vMatActua);
+}
+
+void display(GLFWwindow *window, double currentTime, Nave &nave, vector<Turret> &torretas, vector<Proyectil> &proyectiles)
+{
 
 	glUseProgram(renderingProgram);
 
 	mvLoc = glGetUniformLocation(renderingProgram, "mv_matrix");
 	projLoc = glGetUniformLocation(renderingProgram, "proj_matrix");
+	bgLoc = glGetUniformLocation(renderingProgram, "background");
+	resLoc = glGetUniformLocation(renderingProgram, "resolution");
+	timeLoc = glGetUniformLocation(renderingProgram, "time");
 
 	vMat = glm::lookAt(mainCam.pos,
 					   mainCam.lookingPoint,
 					   glm::vec3(0.0f, 1.0f, 0.0f));
 
-	mMat = glm::translate(glm::mat4(1.0f), {0,0,0});
+	mMat = glm::translate(glm::mat4(1.0f), {0, 0, 0});
 	mvMat = vMat * mMat;
 
 	glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvMat));
 	glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(pMat));
-
-
-//	giros = {M_PI,0,0,0,M_PI,0,M_PI/2,0, 0 ,};
-	mainCam.pos = nave.getPos() + glm::vec3(0.0f ,2.0f ,-2.5f);
+	glUniform1i(bgLoc , 1);
+	glUniform2f(resLoc , (float)width , (float)height);
+	glUniform1f(timeLoc ,(float) currentTime);
+	//	giros = {M_PI,0,0,0,M_PI,0,M_PI/2,0, 0 ,};
+	mainCam.pos = nave.getPos() + glm::vec3(0.0f, 2.0f, -2.5f);
 	mainCam.lookingPoint = nave.getPos();
 
 	// Todos los render //////////////////////////////////////////
-	nave.render(currentTime , vMat ,  mvLoc  ,vao );
-	for (Turret &torreta : torretas)
-	{
-		torreta.render(currentTime , vMat , mvLoc , vao);
-	}
-	
 
-	for (int i = -10; i < 10; i++){
-		for (int j =-10; j < 10; j++)
-			mostrar_trasladado(&mycuadrado , {(float)i,0 ,(float)j}  , vMat , sueloTextura , vao ); 
+	glClear(GL_DEPTH_BUFFER_BIT);
+	glClearColor(208.0, 239.0, 242.0, 1.0);
+	glClear(GL_COLOR_BUFFER_BIT);
+	mostrar_fondo(&mycuadrado, vMat, vao);
+
+	glUniform1i(bgLoc , 0);
+
+
+	nave.render(currentTime, vMat, mvLoc, vao);
+
+	for (auto &torreta : torretas)
+	{
+		torreta.render(currentTime, vMat, mvLoc, vao);
+	}
+	for (auto &proyectil : proyectiles)
+	{
+		proyectil.render(vMat, mvLoc, vao);
+	}
+
+	for (int i = -10; i < 10; i++)
+	{
+		for (int j = -10; j < 10; j++){
+			if (!tieneTorreta( torretas , i,j))
+			mostrar_trasladado(&mycuadrado, {(float)i, 0, (float)j}, vMat, sueloTextura, vao);
+		}
+	}
+	if (disparar)
+	{
+		proyectiles.clear();
+		for (auto &turret : torretas)
+		{
+			turret.lanzarProyectil();
+		}
+		disparar = false;
 	}
 }
 void window_size_callback(GLFWwindow *win, int newWidth, int newHeight)
@@ -154,7 +206,7 @@ void window_size_callback(GLFWwindow *win, int newWidth, int newHeight)
 int main(void)
 {
 	primera = true;
-	
+
 	if (!glfwInit())
 	{
 		exit(EXIT_FAILURE);
@@ -163,7 +215,7 @@ int main(void)
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	GLFWwindow *window = glfwCreateWindow(1500, 900, "Chapter6 - program1", NULL, NULL);
 	glfwMakeContextCurrent(window);
-	
+
 	if (glewInit() != GLEW_OK)
 	{
 		exit(EXIT_FAILURE);
@@ -176,57 +228,56 @@ int main(void)
 
 	Nave myNave = Nave(vao);
 
-	array<Objeto3d,3> modelosTorretas= {
-        Objeto3d(vao, "../modelos-comprobados/turret3.obj"),
-        Objeto3d(vao, "../modelos-comprobados/turret0.obj"),
-        Objeto3d(vao, "../modelos-comprobados/turret1.obj"),
-	};
-
-	array <GLuint,3> texturasTorretas = {
-		Utils::loadTexture("../modelos-comprobados/turret3.jpg"),
-		Utils::loadTexture("../modelos-comprobados/turret0.jpg"),
-		Utils::loadTexture("../modelos-comprobados/turret1.jpg"),
-	};
-
-	//array<Objeto3d,3> modelosProyectil= {
-    //    Objeto3d(vao, "../modelos-comprobados/bomb.obj"),
-    //    Objeto3d(vao, "../modelos-comprobados/turret0.obj"),
-    //    Objeto3d(vao, "../modelos-comprobados/turret1.obj"),
+	disparar = false;
+	//array<Objeto3d, 3> modelosTorretas = {
+	//	Objeto3d(vao, "../modelos-comprobados/turret3.obj"),
+	//	Objeto3d(vao, "../modelos-comprobados/turret0.obj"),
+	//	Objeto3d(vao, "../modelos-comprobados/turret1.obj"),
 	//};
-//
-	//array <GLuint,3> texturasProyectil = {
-	//	Utils::loadTexture("../modelos-comprobados/bomb.jpg"),
+
+	//array<GLuint, 3> texturasTorretas = {
+	//	Utils::loadTexture("../modelos-comprobados/turret3.jpg"),
 	//	Utils::loadTexture("../modelos-comprobados/turret0.jpg"),
 	//	Utils::loadTexture("../modelos-comprobados/turret1.jpg"),
 	//};
 
+	vector<Proyectil> proyectiles;
+	FactoryProyectiles fproyectiles = FactoryProyectiles(vao, &proyectiles);
+	FactoryTorretas fturets = FactoryTorretas(vao, &myNave, &fproyectiles);
+	vector<Turret> torretas = {
+		//	Turret(vao , {-4,0,8} , Turret::tipo::Turret0 , &modelosTorretas[0],texturasTorretas[0] , &myNave ),
+		//	Turret(vao , {-2,0,7} , Turret::tipo::Turret0 , &modelosTorretas[0],texturasTorretas[0] ,  &myNave ),
+		//	Turret(vao , {0,0,7} , Turret::tipo::Turret0 , &modelosTorretas[0],texturasTorretas[0]  ,  &myNave ),
+		//	Turret(vao , {2,0,7} , Turret::tipo::Turret0 , &modelosTorretas[0],texturasTorretas[0]  ,  &myNave ),
+		//	Turret(vao , {4,0,8} , Turret::tipo::Turret0 , &modelosTorretas[0],texturasTorretas[0]  ,  &myNave ),
+		//	Turret(vao , {6,0,-2} , Turret::tipo::Turret1 , &modelosTorretas[1],texturasTorretas[1] ,   &myNave ),
+		//	Turret(vao , {5,0,-0} , Turret::tipo::Turret1 , &modelosTorretas[1],texturasTorretas[1] ,   &myNave ),
+		//	Turret(vao , {7,0, 2} , Turret::tipo::Turret1 , &modelosTorretas[1],texturasTorretas[1] ,   &myNave ),
+		//	Turret(vao , {6,0, 4} , Turret::tipo::Turret1 , &modelosTorretas[1],texturasTorretas[1] ,   &myNave ),
+		//	Turret(vao , {5,0, 6} , Turret::tipo::Turret1 , &modelosTorretas[1],texturasTorretas[1] ,   &myNave ),
+		//	Turret(vao , {-2,0,2} , Turret::tipo::Turret2 , &modelosTorretas[2],texturasTorretas[2] ,  &myNave ),
 
+		fturets.crearTorreta({-4, 0, 8}, Turret::Turret0),
+		fturets.crearTorreta({-2, 0, 7}, Turret::Turret0),
+		fturets.crearTorreta({0, 0, 7}, Turret::Turret0),
+		fturets.crearTorreta({2, 0, 7}, Turret::Turret0),
+		fturets.crearTorreta({4, 0, 8}, Turret::Turret0),
+		fturets.crearTorreta({6, 0, 3}, Turret::Turret0),
 
-	vector<Proyectil> proyectiles; 
-
-
-	vector<Turret> torretas ={
-		Turret(vao , {-4,0,8} , Turret::tipo::Turret0 , &modelosTorretas[0],texturasTorretas[0] , &myNave ),
-		Turret(vao , {-2,0,7} , Turret::tipo::Turret0 , &modelosTorretas[0],texturasTorretas[0] ,  &myNave ),
-		Turret(vao , {0,0,7} , Turret::tipo::Turret0 , &modelosTorretas[0],texturasTorretas[0]  ,  &myNave ),
-		Turret(vao , {2,0,7} , Turret::tipo::Turret0 , &modelosTorretas[0],texturasTorretas[0]  ,  &myNave ),
-		Turret(vao , {4,0,8} , Turret::tipo::Turret0 , &modelosTorretas[0],texturasTorretas[0]  ,  &myNave ),
-
-		Turret(vao , {6,0,-2} , Turret::tipo::Turret1 , &modelosTorretas[1],texturasTorretas[1] ,   &myNave ),
-		Turret(vao , {5,0,-0} , Turret::tipo::Turret1 , &modelosTorretas[1],texturasTorretas[1] ,   &myNave ),
-		Turret(vao , {7,0, 2} , Turret::tipo::Turret1 , &modelosTorretas[1],texturasTorretas[1] ,   &myNave ),
-		Turret(vao , {6,0, 4} , Turret::tipo::Turret1 , &modelosTorretas[1],texturasTorretas[1] ,   &myNave ),
-		Turret(vao , {5,0, 6} , Turret::tipo::Turret1 , &modelosTorretas[1],texturasTorretas[1] ,   &myNave ),
-		Turret(vao , {-2,0,2} , Turret::tipo::Turret2 , &modelosTorretas[2],texturasTorretas[2] ,  &myNave ),
+		fturets.crearTorreta({6, 0, -2}, Turret::Turret1),
+		fturets.crearTorreta({5, 0, -0}, Turret::Turret1),
+		fturets.crearTorreta({7, 0, 2}, Turret::Turret1),
+		fturets.crearTorreta({6, 0, 4}, Turret::Turret1),
+		fturets.crearTorreta({5, 0, 6}, Turret::Turret1),
+		fturets.crearTorreta({-2, 0, 2}, Turret::Turret2),
 	};
 
-
 	double currentTime = 0.0;
-	
+	primera = true;
 	while (!glfwWindowShouldClose(window))
 	{
-		currentTime =glfwGetTime();
-		display(window,  currentTime , myNave , torretas);
+		currentTime = glfwGetTime();
+		display(window, currentTime, myNave, torretas, proyectiles);
 		glfwSwapBuffers(window);
 
 		glfwPollEvents();
@@ -236,18 +287,20 @@ int main(void)
 			myNave.setTipo(Nave::nave1);
 		if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS)
 			myNave.setTipo(Nave::nave2);
+		if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
+			disparar = true;
 		if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
 			mainCam.lookingPoint.x += 0.1;
-		if (myNave.ejecutandoAnimacion()== false)
+		if (myNave.ejecutandoAnimacion() == false)
 		{
-		if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-			myNave.moverNave( glm::vec3(0.0f ,0.0f ,1.0f) ,currentTime );
-		if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-			myNave.moverNave( glm::vec3(0.0f ,0.0f ,-1.0f) ,currentTime );
-		if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
-			myNave.moverNave( glm::vec3(1.0f ,0.0f ,0.0f) ,currentTime );
-		if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-			myNave.moverNave( glm::vec3(-1.0f ,0.0f ,0.0f) ,currentTime );
+			if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+				myNave.moverNave(glm::vec3(0.0f, 0.0f, 1.0f), currentTime);
+			if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+				myNave.moverNave(glm::vec3(0.0f, 0.0f, -1.0f), currentTime);
+			if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+				myNave.moverNave(glm::vec3(1.0f, 0.0f, 0.0f), currentTime);
+			if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+				myNave.moverNave(glm::vec3(-1.0f, 0.0f, 0.0f), currentTime);
 		}
 	}
 

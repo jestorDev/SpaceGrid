@@ -62,3 +62,9 @@ void Objeto3d::draw(GLuint *arrVaos, GLuint texura , GLuint mvLoc , glm::mat4 vM
 	glBindTexture(GL_TEXTURE_2D, texura);
     glDrawArrays(GL_TRIANGLES, 0, totalVertices);
 }
+void Objeto3d::drawNoTexture (GLuint *arrVaos, GLuint mvLoc , glm::mat4 vMat )
+{
+    glBindVertexArray(arrVaos[number_id]);
+    glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(vMat));
+    glDrawArrays(GL_TRIANGLES, 0, totalVertices);
+}

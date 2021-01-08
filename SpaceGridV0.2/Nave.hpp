@@ -105,6 +105,9 @@ Nave::Nave(GLuint *arrVaos)
 	 Utils::loadTexture("../modelos-comprobados/nave2.jpg"),
     };    
     
+    std::cout<< "[nave.hpp]Cargados modelos y texturas de las naves" ;
+
+    
     std::cout<< "Cargados modelos y texturas de las naves" ;
 
 }

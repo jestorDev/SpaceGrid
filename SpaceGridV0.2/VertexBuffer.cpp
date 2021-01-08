@@ -20,13 +20,13 @@ VertexBuffer::VertexBuffer(const void *data, unsigned int size ,GLint elementCou
     }
     else
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
-    std::cout << "LLamado el constructor buffer datos, nuevo" << ((isIndexBuffer) ? "indexBuffer " : "vertexBuffer ")<< gl_id << std::endl;
+    //std::cout << "LLamado el constructor buffer datos, nuevo" << ((isIndexBuffer) ? "indexBuffer " : "vertexBuffer ")<< gl_id << std::endl;
 }
 
 VertexBuffer::VertexBuffer()
 {
     gl_id = 0;
-    std::cout << "LLamado el constructor defecto" << std::endl;
+    //std::cout << "LLamado el constructor defecto" << std::endl;
 }
 
 GLuint VertexBuffer::getId()
