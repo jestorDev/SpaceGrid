@@ -36,6 +36,7 @@ private:
         };   
 
     const std::array<double ,3> tMovimiento= { 0.2 , 0.30, 0.25};
+    //tiempo de movimiento para cada modelo en segundos
     bool ejecutandoTraslacion;
     bool ejecutandoRotacion;
     AnimacionTraslacion miTraslacion;
@@ -67,15 +68,16 @@ public:
         if (ejecutandoTraslacion)
             pos = miTraslacion.nuevoPos(time, ejecutandoTraslacion);
         // idle rotacion
-        giroz = (M_PI/10.0)*sin(time*2);
+        giroz = (M_PI/10.0)* 0.5*(sin(time*2)+sin(time*2+2));
         // idle rotacion
-        pos.y = 1 + 0.3*(sin(time*3 + 0.2)+sin( time*4));
+        pos.y = 1 + 0.1*(sin(time*3 + 0.2)+sin(time*4));
     }
 
     void render(double time , glm::mat4 vMatActua , GLuint mvLoc  , GLuint *arrVaos )
     {
         actualizarAnimaciones(time);
-        vMatActua *= glm::translate(glm::mat4(1.0f), pos);
+        //                                          parcheado ojala no de problemas ||||||
+        vMatActua *= glm::translate(glm::mat4(1.0f), pos + glm::vec3( 0.0f , 0.0f , -1.0f));
 	    vMatActua *= glm::rotate(glm::mat4(1.0f),giroz,glm::vec3(0.0f,0.0f,1.0f));
 	    vMatActua *= glm::scale(glm::mat4(1.0f), escalamientos[modelo]);
 	    modelos[modelo].draw(arrVaos, texturas[modelo], mvLoc, vMatActua);
@@ -86,7 +88,8 @@ public:
 Nave::Nave(GLuint *arrVaos)
 {
     ejecutandoTraslacion = false;
-    pos = {0.0f, 1.0f, 0.0f};
+    pos = {0.0f, 0.0f, 0.0f};
+    
     modelo = nave1;
     giroz = 0;
 
