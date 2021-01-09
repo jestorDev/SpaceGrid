@@ -88,7 +88,7 @@ public:
 Nave::Nave(GLuint *arrVaos)
 {
     ejecutandoTraslacion = false;
-    pos = {0.0f, 0.0f, 0.0f};
+    pos = {0.0f, 0.0f, -40.0f};
     
     modelo = nave1;
     giroz = 0;

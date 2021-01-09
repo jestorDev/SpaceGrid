@@ -11,6 +11,7 @@
 #include <glm/gtc/type_ptr.hpp>         // glm::value_ptr
 #include <glm/gtc/matrix_transform.hpp> // glm::translate, glm::rotate, glm::scale, glm::perspective
 #include <cmath>
+#include <stdlib.h>
 #include "Nave.hpp"
 #include "Proyectiles.hpp"
 
@@ -32,12 +33,13 @@ private:
     glm::vec3 pos;
     float giroybase;
     float giroy;
+    float frecuencia;
     Objeto3d * modeloTorreta;
     FactoryProyectiles * factory;
     GLuint textura;
     glm::vec3 escalamiento;
     bool ejecutandoRotacion;
-
+    float ultimoDisparo;
 public:
     Turret(GLuint *arrVaos, 
         glm::vec3 posInicial, 
@@ -47,7 +49,9 @@ public:
         float giroybase,
         glm::vec3 escalamiento, 
         FactoryProyectiles * factory,
-        Nave * nave);
+        Nave * nave,
+        float frecuencia
+        );
     ~Turret();
 
     void apuntarANave(glm::vec3 desplazamiento, double tiempoInicio)
@@ -73,7 +77,10 @@ public:
     void actualizarAnimaciones(double time)
     {
         apuntarANave({0,0,0,} , time);
-        
+        if((time  - ultimoDisparo > frecuencia)&& glm::distance( nave->getPos() , pos )< 10.0  ){
+            lanzarProyectil(time);
+            ultimoDisparo = time;
+        }
         
     }
     glm::vec3 getPos (){
@@ -89,6 +96,9 @@ public:
     void render(double time, glm::mat4 vMatActua, GLuint mvLoc, GLuint *arrVaos)
     {
         actualizarAnimaciones(time);
+
+
+
         vMatActua *= glm::translate(glm::mat4(1.0f), pos);
         vMatActua *= glm::rotate(glm::mat4(1.0f), giroy, glm::vec3(0.0f, 1.0f, 0.0f));
         vMatActua *= glm::scale(glm::mat4(1.0f), escalamiento);
@@ -104,7 +114,8 @@ Turret::Turret(GLuint *arrVaos,
         float giroybase,
         glm::vec3 escalamiento, 
         FactoryProyectiles * factory,
-        Nave * nave
+        Nave * nave,
+        float frecuencia
         )
 {
     pos = posInicial;
@@ -119,6 +130,9 @@ Turret::Turret(GLuint *arrVaos,
     this->nave = nave;
     this->modeloTorreta = modeloTorreta;
     this->textura =  textura;
+    srand(time(NULL)); 
+    this->frecuencia = frecuencia; //((rand()%1000)/500.0);
+    ultimoDisparo = 0;
     std::cout << "Cargados modeloTorretas y texturas de las Turrets";
     //lanzarProyectil();
 }
@@ -136,6 +150,7 @@ private:
     Nave *punteroNave;
     GLuint *vaoArr;
     FactoryProyectiles * p_factory;
+    
     std::array<Objeto3d, 3> modelosTorretas;
     std::array<GLuint, 3> texturasTorretas;
     std::array<glm::vec3, 3> escalamientos = {
@@ -144,7 +159,7 @@ private:
         glm::vec3(0.03, 0.03, 0.03),
     };
     const std::array<double, 3> girpyIncial = {M_PI, M_PI / 2.0, 0};
-    const std::array<double, 3> frecuencia = {2.0, 4.0, 8.0};
+    const std::array<double, 3> frecuencias = {1.0, 0.5, 1.0};
 
 public:
     FactoryTorretas(GLuint *vao, Nave *nave , FactoryProyectiles * factory)
@@ -188,7 +203,9 @@ public:
             girpyIncial[tipo],
             escalamientos[tipo],
             p_factory,
-            punteroNave);
+            punteroNave,
+            frecuencias[tipo]
+            );
     }
 };
 
