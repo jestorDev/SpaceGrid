@@ -176,7 +176,7 @@ void display(GLFWwindow *window, double currentTime, Nave &nave, vector<Turret> 
 	}
 	for (auto &proyectil : proyectiles)
 	{
-		proyectil.render(vMat, mvLoc, vao);
+		proyectil.render(vMat, mvLoc, vao, currentTime);
 	}
 
 	for (int i = -10; i < 10; i++)
@@ -191,7 +191,7 @@ void display(GLFWwindow *window, double currentTime, Nave &nave, vector<Turret> 
 		proyectiles.clear();
 		for (auto &turret : torretas)
 		{
-			turret.lanzarProyectil();
+			turret.lanzarProyectil(currentTime);
 		}
 		disparar = false;
 	}
@@ -269,7 +269,13 @@ int main(void)
 		fturets.crearTorreta({7, 0, 2}, Turret::Turret1),
 		fturets.crearTorreta({6, 0, 4}, Turret::Turret1),
 		fturets.crearTorreta({5, 0, 6}, Turret::Turret1),
-		fturets.crearTorreta({-2, 0, 2}, Turret::Turret2),
+
+		fturets.crearTorreta({-5, 0, -2}, Turret::Turret2),
+		fturets.crearTorreta({-3, 0, -2}, Turret::Turret2),
+		fturets.crearTorreta({-1, 0, -2}, Turret::Turret2),
+		fturets.crearTorreta({ 1, 0, -2}, Turret::Turret2),
+		fturets.crearTorreta({ 3, 0, -2}, Turret::Turret2),
+		fturets.crearTorreta({ 5, 0, -2}, Turret::Turret2),
 	};
 
 	double currentTime = 0.0;

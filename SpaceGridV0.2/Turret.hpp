@@ -79,10 +79,10 @@ public:
     glm::vec3 getPos (){
         return pos;
     }
-    void lanzarProyectil (){
-        glm::vec3 direccion =  glm::rotate(glm::mat4(1.0f), giroy, glm::vec3(0.0f, 1.0f, 0.0f)) * glm::vec4(0,0,1,1) ; // { sin(giroy) ,0 , cos(giroy) };
+    void lanzarProyectil (double time){
+        glm::vec3 direccion =  glm::rotate(glm::mat4(1.0f), giroy -giroybase, glm::vec3(0.0f, 1.0f, 0.0f)) * glm::vec4(0,0,1,1) ; // { sin(giroy) ,0 , cos(giroy) };
         std::cout << direccion.x<< ' ' <<direccion.y<< ' ' <<direccion.z <<"\n " ;
-        factory->crearProyectil((unsigned)forma , glm::vec3(0,.5,0)+ pos + direccion * 0.5f, direccion);
+        factory->crearProyectil((unsigned)forma , glm::vec3(0,.5,0)+ pos + direccion * 0.5f, direccion,time);
     }
 
 
