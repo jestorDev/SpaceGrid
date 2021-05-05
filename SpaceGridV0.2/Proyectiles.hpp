@@ -24,7 +24,7 @@ struct Proyectil {
     glm::vec3 escalado;
     bool proximoEliminar;
     double tiempoInicial;
-    
+
     unsigned tipo;
 
     float interpolacion (double x){
@@ -38,25 +38,15 @@ struct Proyectil {
             
             pos.x += (direccion.x) * 0.07f;
             pos.z += (direccion.z) * 0.07f;            
-            pos.y = 0.5+ 2*interpolacion(porcentaje) ;  // 5 es la altura de la parabola
+            pos.y = 0.5+ 2*interpolacion(porcentaje) ;  // 2 es la altura de la parabola
         }
         else
         pos += direccion * 0.05f;
-
-        if (proximoEliminar){
-            std::cout << "El proyectil en la poscicion x:" << pos.x<< " y:" <<pos.y << " z:"<<  pos.z;
-            std::cout << " Sera eliminado \n";
-        }
     } 
 
     void render (glm::mat4 vMatActua, GLuint mvLoc, GLuint *arrVaos , double time){
         update(time);
-
         vMatActua *= glm::translate(glm::mat4(1.0f), pos + glm::vec3(0.0 ,0.0,0.0));
-
-        if (tipo == 2)
-        vMatActua *= glm::rotate(glm::mat4(1.0f),(float)sin(time) *2, glm::vec3(0.0f, 0.0f, 1.0f));
-
         vMatActua *= glm::rotate(glm::mat4(1.0f), giroybase, glm::vec3(0.0f, 1.0f, 0.0f));
         vMatActua *= glm::scale(glm::mat4(1.0f), escalado);
         modelo->draw(arrVaos, textura, mvLoc, vMatActua);

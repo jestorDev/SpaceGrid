@@ -66,7 +66,7 @@ void ModelImporter::parseOBJ(const char *filePath) {
 			}
 		}
 	}
-	std::cout<< "Terminado parseo ";
+	std::cout<< "Terminado parseo "<< triangleVerts.size()/3 <<  " vertices ingresados\n";
 
 }
 int ModelImporter::getNumVertices() { return (triangleVerts.size()/3); }

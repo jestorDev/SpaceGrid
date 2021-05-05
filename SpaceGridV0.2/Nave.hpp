@@ -88,7 +88,7 @@ public:
 Nave::Nave(GLuint *arrVaos)
 {
     ejecutandoTraslacion = false;
-    pos = {0.0f, 0.0f, -40.0f};
+    pos = {0.0f, 0.0f, -35.0f};
     
     modelo = nave1;
     giroz = 0;
@@ -106,10 +106,6 @@ Nave::Nave(GLuint *arrVaos)
     };    
     
     std::cout<< "[nave.hpp]Cargados modelos y texturas de las naves" ;
-
-    
-    std::cout<< "Cargados modelos y texturas de las naves" ;
-
 }
 
 Nave::~Nave()

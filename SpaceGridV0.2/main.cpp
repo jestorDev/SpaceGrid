@@ -32,11 +32,11 @@ GLuint renderingProgram;
 GLuint vao[numVAOs];
 VertexBuffer cuadrado;
 
-GLuint sueloTextura, goldTextura;
+GLuint sueloTextura;
 
 bool disparar;
 
-GLuint mvLoc, projLoc,bgLoc,resLoc,timeLoc;
+GLuint mvLoc, projLoc, bgLoc, resLoc, timeLoc;
 int Objeto3d::objectCount = 0;
 bool primera;
 int width, height;
@@ -50,21 +50,11 @@ void bindGLTexture(GLuint texture)
 	glBindTexture(GL_TEXTURE_2D, texture);
 }
 
-float toRadians(float degrees) { return (degrees * 2.0f * 3.14159f) / 360.0f; }
-
-bool tieneTorreta (vector<Turret> &torretas  , int i,int j){
-	for (Turret &torreta : torretas)
-	{
-		if ( glm::length(torreta.getPos() - glm::vec3((float)i, 0, (float)j)) < 0.1)
-			return true;
-	}
-	return false;
-}
-bool salioDelEscenario( Proyectil &proyectil){
-
+bool salioDelEscenario(Proyectil &proyectil)
+{
 	if (abs(proyectil.pos.x) > 13.0f)
 		return true;
-	if ( abs(proyectil.pos.z) > 40.0f)
+	if (abs(proyectil.pos.z) > 40.0f)
 		return true;
 	if (proyectil.pos.y < -4.0f)
 		return true;
@@ -72,6 +62,17 @@ bool salioDelEscenario( Proyectil &proyectil){
 	return false;
 }
 
+float toRadians(float degrees) { return (degrees * 2.0f * 3.14159f) / 360.0f; }
+
+bool tieneTorreta(vector<Turret> &torretas, int i, int j)
+{
+	for (Turret &torreta : torretas)
+	{
+		if (glm::length(torreta.getPos() - glm::vec3((float)i, 0, (float)j)) < 0.1)
+			return true;
+	}
+	return false;
+}
 
 void setupVertices(void)
 {
@@ -112,7 +113,7 @@ void setupVertices(void)
 void init(GLFWwindow *window)
 {
 	renderingProgram = Utils::createShaderProgram("vertShader.glsl", "fragShader.glsl");
-//	backgroundrenderingProgram = Utils::createShaderProgram("vertShader.glsl", "fondo.glsl");
+	//	backgroundrenderingProgram = Utils::createShaderProgram("vertShader.glsl", "fondo.glsl");
 
 	glfwGetFramebufferSize(window, &width, &height);
 	aspect = (float)width / (float)height;
@@ -121,7 +122,6 @@ void init(GLFWwindow *window)
 	setupVertices();
 
 	sueloTextura = Utils::loadTexture("../modelos-comprobados/suelo0.jpg");
-	goldTextura = Utils::loadTexture("../modelos-comprobados/gold.jpg");
 	mainCam.lookingPoint = glm::vec3(0.0f, 0, 0.0f);
 	mainCam.pos = glm::vec3(0.0, 3.0, 5.0);
 
@@ -136,13 +136,11 @@ void mostrar_fondo(Objeto3d *objeto, glm::mat4 vMatActua, GLuint vaos[numVAOs])
 	objeto->drawNoTexture(vaos, mvLoc, vMatActua);
 }
 
-
-void mostrar_trasladado(Objeto3d *objeto, glm::vec3 traslado, glm::mat4 vMatActua, GLuint texture, GLuint vaos[numVAOs] , bool escalado= true)
+void mostrar_trasladado(Objeto3d *objeto, glm::vec3 traslado, glm::mat4 vMatActua, GLuint texture, GLuint vaos[numVAOs])
 {
-	const float h =  0;//0.1 * sin(glfwGetTime() + sqrt(traslado.x * traslado.x + traslado.y * traslado.y));
+	const float h = 0; //0.1 * sin(glfwGetTime() + sqrt(traslado.x * traslado.x + traslado.y * traslado.y));
 	vMatActua *= glm::translate(glm::mat4(1.0f), traslado - glm::vec3(0.5, h, 0.5));
-	if (escalado)
-		vMatActua *= glm::scale(glm::mat4(1.0f), glm::vec3(0.8, 0.8, 0.8));
+	vMatActua *= glm::scale(glm::mat4(1.0f), glm::vec3(0.8, 0.8, 0.8));
 	objeto->draw(vaos, texture, mvLoc, vMatActua);
 }
 
@@ -162,13 +160,15 @@ void display(GLFWwindow *window, double currentTime, Nave &nave, vector<Turret> 
 					   glm::vec3(0.0f, 1.0f, 0.0f));
 
 	mMat = glm::translate(glm::mat4(1.0f), {0, 0, 0});
+
+
 	mvMat = vMat * mMat;
 
 	glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvMat));
 	glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(pMat));
-	glUniform1i(bgLoc , 1);
-	glUniform2f(resLoc , (float)width , (float)height);
-	glUniform1f(timeLoc ,(float) currentTime);
+	glUniform1i(bgLoc, 1);
+	glUniform2f(resLoc, (float)width, (float)height);
+	glUniform1f(timeLoc, (float)currentTime);
 	//	giros = {M_PI,0,0,0,M_PI,0,M_PI/2,0, 0 ,};
 	mainCam.pos = nave.getPos() + glm::vec3(0.0f, 2.0f, -2.5f);
 	mainCam.lookingPoint = nave.getPos();
@@ -180,8 +180,7 @@ void display(GLFWwindow *window, double currentTime, Nave &nave, vector<Turret> 
 	glClear(GL_COLOR_BUFFER_BIT);
 	mostrar_fondo(&mycuadrado, vMat, vao);
 
-	glUniform1i(bgLoc , 0);
-
+	glUniform1i(bgLoc, 0);
 
 	nave.render(currentTime, vMat, mvLoc, vao);
 
@@ -192,25 +191,23 @@ void display(GLFWwindow *window, double currentTime, Nave &nave, vector<Turret> 
 	for (auto &proyectil : proyectiles)
 	{
 		proyectil.render(vMat, mvLoc, vao, currentTime);
-		if (salioDelEscenario(proyectil)){
-			proyectil.proximoEliminar = true; 
-			std::cout << "asdasdasd\n"; 
+		if (salioDelEscenario(proyectil))
+		{
+			proyectil.proximoEliminar = true;
 		}
 	}
 
 	for (int i = -12; i < 12; i++)
 	{
-		for (int j = -40; j < 40; j++){
-			if (j > 34)
-			mostrar_trasladado(&mycuadrado, {(float)i, 0, (float)j}, vMat, goldTextura, vao , false	);
-			else if (!tieneTorreta( torretas , i,j))
-			mostrar_trasladado(&mycuadrado, {(float)i, 0, (float)j}, vMat, sueloTextura, vao);
-
+		for (int j = -40; j < 40; j++)
+		{
+			if (!tieneTorreta(torretas, i, j))
+				mostrar_trasladado(&mycuadrado, {(float)i, 0, (float)j}, vMat, sueloTextura, vao);
 		}
 	}
 	if (disparar)
 	{
-		//proyectiles.clear();
+		proyectiles.clear();
 		for (auto &turret : torretas)
 		{
 			turret.lanzarProyectil(currentTime);
@@ -218,22 +215,18 @@ void display(GLFWwindow *window, double currentTime, Nave &nave, vector<Turret> 
 		disparar = false;
 	}
 
-	// elimina los proyectiles marcados a eliminar
 	proyectiles.erase(std::remove_if(
-	    proyectiles.begin(), proyectiles.end(),
-    	[](const Proyectil& p) { 
-        	return p.proximoEliminar; // put your condition here
-    	}), proyectiles.end());
-
-
-
-
-
+						  proyectiles.begin(), proyectiles.end(),
+						  [](const Proyectil &p) {
+							  return p.proximoEliminar; // put your condition here
+						  }),
+					  proyectiles.end());	
 }
 void window_size_callback(GLFWwindow *win, int newWidth, int newHeight)
 {
 	aspect = (float)newWidth / (float)newHeight;
 	glViewport(0, 0, newWidth, newHeight);
+
 	pMat = glm::perspective(1.0472f, aspect, 0.1f, 1000.0f);
 }
 
@@ -279,131 +272,104 @@ int main(void)
 	FactoryProyectiles fproyectiles = FactoryProyectiles(vao, &proyectiles);
 	FactoryTorretas fturets = FactoryTorretas(vao, &myNave, &fproyectiles);
 	vector<Turret> torretas = {
-		//	Turret(vao , {-4,0,8} , Turret::tipo::Turret0 , &modelosTorretas[0],texturasTorretas[0] , &myNave ),
-		//	Turret(vao , {-2,0,7} , Turret::tipo::Turret0 , &modelosTorretas[0],texturasTorretas[0] ,  &myNave ),
-		//	Turret(vao , {0,0,7} , Turret::tipo::Turret0 , &modelosTorretas[0],texturasTorretas[0]  ,  &myNave ),
-		//	Turret(vao , {2,0,7} , Turret::tipo::Turret0 , &modelosTorretas[0],texturasTorretas[0]  ,  &myNave ),
-		//	Turret(vao , {4,0,8} , Turret::tipo::Turret0 , &modelosTorretas[0],texturasTorretas[0]  ,  &myNave ),
-		//	Turret(vao , {6,0,-2} , Turret::tipo::Turret1 , &modelosTorretas[1],texturasTorretas[1] ,   &myNave ),
-		//	Turret(vao , {5,0,-0} , Turret::tipo::Turret1 , &modelosTorretas[1],texturasTorretas[1] ,   &myNave ),
-		//	Turret(vao , {7,0, 2} , Turret::tipo::Turret1 , &modelosTorretas[1],texturasTorretas[1] ,   &myNave ),
-		//	Turret(vao , {6,0, 4} , Turret::tipo::Turret1 , &modelosTorretas[1],texturasTorretas[1] ,   &myNave ),
-		//	Turret(vao , {5,0, 6} , Turret::tipo::Turret1 , &modelosTorretas[1],texturasTorretas[1] ,   &myNave ),
-		//	Turret(vao , {-2,0,2} , Turret::tipo::Turret2 , &modelosTorretas[2],texturasTorretas[2] ,  &myNave ),
 
 
 		fturets.crearTorreta({-10, 0, -8 + 24}, Turret::Turret1),
-		fturets.crearTorreta({ -8, 0, -8 + 24}, Turret::Turret1),
-		fturets.crearTorreta({ -6, 0, -8 + 24}, Turret::Turret1),
-		fturets.crearTorreta({ -4, 0, -6 + 24}, Turret::Turret1),
-		fturets.crearTorreta({  0, 0, -4 + 24}, Turret::Turret1),
-		fturets.crearTorreta({  4, 0, -6 + 24}, Turret::Turret1),
-		fturets.crearTorreta({  6, 0, -8 + 24}, Turret::Turret1),
-		fturets.crearTorreta({  8, 0, -8 + 24}, Turret::Turret1),
-		fturets.crearTorreta({ 10, 0, -8 + 24}, Turret::Turret1),
-
-
+		fturets.crearTorreta({-8, 0, -8 + 24}, Turret::Turret1),
+		fturets.crearTorreta({-6, 0, -8 + 24}, Turret::Turret1),
+		fturets.crearTorreta({-4, 0, -6 + 24}, Turret::Turret1),
+		fturets.crearTorreta({0, 0, -4 + 24}, Turret::Turret1),
+		fturets.crearTorreta({4, 0, -6 + 24}, Turret::Turret1),
+		fturets.crearTorreta({6, 0, -8 + 24}, Turret::Turret1),
+		fturets.crearTorreta({8, 0, -8 + 24}, Turret::Turret1),
+		fturets.crearTorreta({10, 0, -8 + 24}, Turret::Turret1),
 
 		fturets.crearTorreta({-10, 0, -8 + 23}, Turret::Turret0),
-		fturets.crearTorreta({ -8, 0, -6 + 23}, Turret::Turret0),
-		fturets.crearTorreta({ -6, 0, -4 + 23}, Turret::Turret0),
-		fturets.crearTorreta({ -4, 0, -2 + 23}, Turret::Turret0),
-		fturets.crearTorreta({ -2, 0,  0 + 23}, Turret::Turret0),
-		fturets.crearTorreta({  2, 0, -2 + 23}, Turret::Turret0),
-		fturets.crearTorreta({  4, 0, -4 + 23}, Turret::Turret0),
-		fturets.crearTorreta({  6, 0, -4 + 23}, Turret::Turret0),
-		fturets.crearTorreta({  8, 0, -4 + 23}, Turret::Turret0),
+		fturets.crearTorreta({-8, 0, -6 + 23}, Turret::Turret0),
+		fturets.crearTorreta({-6, 0, -4 + 23}, Turret::Turret0),
+		fturets.crearTorreta({-4, 0, -2 + 23}, Turret::Turret0),
+		fturets.crearTorreta({-2, 0, 0 + 23}, Turret::Turret0),
+		fturets.crearTorreta({2, 0, -2 + 23}, Turret::Turret0),
+		fturets.crearTorreta({4, 0, -4 + 23}, Turret::Turret0),
+		fturets.crearTorreta({6, 0, -4 + 23}, Turret::Turret0),
+		fturets.crearTorreta({8, 0, -4 + 23}, Turret::Turret0),
 
-		fturets.crearTorreta({10, 0,-8 + 23}, Turret::Turret0),
-		fturets.crearTorreta({ 8, 0,-6 + 23}, Turret::Turret0),
-		fturets.crearTorreta({ 6, 0,-4 + 23}, Turret::Turret0),
-		fturets.crearTorreta({ 4, 0,-2 + 23}, Turret::Turret0),
-		fturets.crearTorreta({ 2, 0, 0 + 23}, Turret::Turret0),
-		fturets.crearTorreta({-2, 0,-2 + 23}, Turret::Turret0),
-		fturets.crearTorreta({-4, 0,-4 + 23}, Turret::Turret0),
-		fturets.crearTorreta({-6, 0,-4 + 23}, Turret::Turret0),
-		fturets.crearTorreta({-8, 0,-4 + 23}, Turret::Turret0),
+		fturets.crearTorreta({10, 0, -8 + 23}, Turret::Turret0),
+		fturets.crearTorreta({8, 0, -6 + 23}, Turret::Turret0),
+		fturets.crearTorreta({6, 0, -4 + 23}, Turret::Turret0),
+		fturets.crearTorreta({4, 0, -2 + 23}, Turret::Turret0),
+		fturets.crearTorreta({2, 0, 0 + 23}, Turret::Turret0),
+		fturets.crearTorreta({-2, 0, -2 + 23}, Turret::Turret0),
+		fturets.crearTorreta({-4, 0, -4 + 23}, Turret::Turret0),
+		fturets.crearTorreta({-6, 0, -4 + 23}, Turret::Turret0),
+		fturets.crearTorreta({-8, 0, -4 + 23}, Turret::Turret0),
 
-
-
-
-
-		fturets.crearTorreta({-9+1, 0, 10}, Turret::Turret2),
-		fturets.crearTorreta({-7+1, 0, 10}, Turret::Turret2),
-		fturets.crearTorreta({-5+1, 0, 10}, Turret::Turret2),
-		fturets.crearTorreta({-3+1, 0, 10}, Turret::Turret2),
-		fturets.crearTorreta({-1+1, 0, 10}, Turret::Turret2),
-		fturets.crearTorreta({ 1+1, 0, 10}, Turret::Turret2),
-		fturets.crearTorreta({ 3+1, 0, 10}, Turret::Turret2),
-		fturets.crearTorreta({ 5+1, 0, 10}, Turret::Turret2),
-		fturets.crearTorreta({ 7+1, 0, 10}, Turret::Turret2),
-		fturets.crearTorreta({ 9+1, 0, 10}, Turret::Turret2),
-
+		fturets.crearTorreta({-9 + 1, 0, 10}, Turret::Turret2),
+		fturets.crearTorreta({-7 + 1, 0, 10}, Turret::Turret2),
+		fturets.crearTorreta({-5 + 1, 0, 10}, Turret::Turret2),
+		fturets.crearTorreta({-3 + 1, 0, 10}, Turret::Turret2),
+		fturets.crearTorreta({-1 + 1, 0, 10}, Turret::Turret2),
+		fturets.crearTorreta({1 + 1, 0, 10}, Turret::Turret2),
+		fturets.crearTorreta({3 + 1, 0, 10}, Turret::Turret2),
+		fturets.crearTorreta({5 + 1, 0, 10}, Turret::Turret2),
+		fturets.crearTorreta({7 + 1, 0, 10}, Turret::Turret2),
+		fturets.crearTorreta({9 + 1, 0, 10}, Turret::Turret2),
 
 		fturets.crearTorreta({-10, 0, -8}, Turret::Turret0),
-		fturets.crearTorreta({ -8, 0, -6}, Turret::Turret0),
-		fturets.crearTorreta({ -6, 0, -4}, Turret::Turret0),
-		fturets.crearTorreta({ -4, 0, -2}, Turret::Turret0),
-		fturets.crearTorreta({ -2, 0,  0}, Turret::Turret0),
-		fturets.crearTorreta({  2, 0,  2}, Turret::Turret0),
-		fturets.crearTorreta({  4, 0,  4}, Turret::Turret0),
-		fturets.crearTorreta({  6, 0,  4}, Turret::Turret0),
-		fturets.crearTorreta({  8, 0,  4}, Turret::Turret0),
+		fturets.crearTorreta({-8, 0, -6}, Turret::Turret0),
+		fturets.crearTorreta({-6, 0, -4}, Turret::Turret0),
+		fturets.crearTorreta({-4, 0, -2}, Turret::Turret0),
+		fturets.crearTorreta({-2, 0, 0}, Turret::Turret0),
+		fturets.crearTorreta({2, 0, 2}, Turret::Turret0),
+		fturets.crearTorreta({4, 0, 4}, Turret::Turret0),
+		fturets.crearTorreta({6, 0, 4}, Turret::Turret0),
+		fturets.crearTorreta({8, 0, 4}, Turret::Turret0),
 
-		fturets.crearTorreta({10, 0,-8}, Turret::Turret0),
-		fturets.crearTorreta({ 8, 0,-6}, Turret::Turret0),
-		fturets.crearTorreta({ 6, 0,-4}, Turret::Turret0),
-		fturets.crearTorreta({ 4, 0,-2}, Turret::Turret0),
-		fturets.crearTorreta({ 2, 0, 0}, Turret::Turret0),
+		fturets.crearTorreta({10, 0, -8}, Turret::Turret0),
+		fturets.crearTorreta({8, 0, -6}, Turret::Turret0),
+		fturets.crearTorreta({6, 0, -4}, Turret::Turret0),
+		fturets.crearTorreta({4, 0, -2}, Turret::Turret0),
+		fturets.crearTorreta({2, 0, 0}, Turret::Turret0),
 		fturets.crearTorreta({-2, 0, 2}, Turret::Turret0),
 		fturets.crearTorreta({-4, 0, 4}, Turret::Turret0),
 		fturets.crearTorreta({-6, 0, 4}, Turret::Turret0),
 		fturets.crearTorreta({-8, 0, 4}, Turret::Turret0),
-
-
-
 
 		fturets.crearTorreta({-9, 0, -10}, Turret::Turret2),
 		fturets.crearTorreta({-7, 0, -10}, Turret::Turret2),
 		fturets.crearTorreta({-5, 0, -10}, Turret::Turret2),
 		fturets.crearTorreta({-3, 0, -10}, Turret::Turret2),
 		fturets.crearTorreta({-1, 0, -10}, Turret::Turret2),
-		fturets.crearTorreta({ 1, 0, -10}, Turret::Turret2),
-		fturets.crearTorreta({ 3, 0, -10}, Turret::Turret2),
-		fturets.crearTorreta({ 5, 0, -10}, Turret::Turret2),
-		fturets.crearTorreta({ 7, 0, -10}, Turret::Turret2),
-		fturets.crearTorreta({ 9, 0, -10}, Turret::Turret2),
+		fturets.crearTorreta({1, 0, -10}, Turret::Turret2),
+		fturets.crearTorreta({3, 0, -10}, Turret::Turret2),
+		fturets.crearTorreta({5, 0, -10}, Turret::Turret2),
+		fturets.crearTorreta({7, 0, -10}, Turret::Turret2),
+		fturets.crearTorreta({9, 0, -10}, Turret::Turret2),
 
 		fturets.crearTorreta({-9, 0, -12}, Turret::Turret1),
 		fturets.crearTorreta({-5, 0, -12}, Turret::Turret1),
 		fturets.crearTorreta({-1, 0, -12}, Turret::Turret1),
-		fturets.crearTorreta({ 3, 0, -12}, Turret::Turret1),
-		fturets.crearTorreta({ 7, 0, -12}, Turret::Turret1),
-		fturets.crearTorreta({ 9, 0, -12}, Turret::Turret1),
-
-
+		fturets.crearTorreta({3, 0, -12}, Turret::Turret1),
+		fturets.crearTorreta({7, 0, -12}, Turret::Turret1),
+		fturets.crearTorreta({9, 0, -12}, Turret::Turret1),
 
 		fturets.crearTorreta({6, 0, -17}, Turret::Turret1),
 		fturets.crearTorreta({-6, 0, -17}, Turret::Turret1),
-		fturets.crearTorreta({ 9, 0, -21}, Turret::Turret1),
+		fturets.crearTorreta({9, 0, -21}, Turret::Turret1),
 		fturets.crearTorreta({-9, 0, -21}, Turret::Turret1),
-		fturets.crearTorreta({ 1, 0, -23}, Turret::Turret1),
+		fturets.crearTorreta({1, 0, -23}, Turret::Turret1),
 		fturets.crearTorreta({-1, 0, -23}, Turret::Turret1),
 
-
-
-
-		fturets.crearTorreta({-9+1, 0, -30}, Turret::Turret2),
-		fturets.crearTorreta({-7+1, 0, -30}, Turret::Turret2),
-		fturets.crearTorreta({-5+1, 0, -30}, Turret::Turret2),
-		fturets.crearTorreta({-3+1, 0, -30}, Turret::Turret2),
-		fturets.crearTorreta({-1+1, 0, -30}, Turret::Turret2),
-		fturets.crearTorreta({ 1+1, 0, -30}, Turret::Turret2),
-		fturets.crearTorreta({ 3+1, 0, -30}, Turret::Turret2),
-		fturets.crearTorreta({ 5+1, 0, -30}, Turret::Turret2),
-		fturets.crearTorreta({ 7+1, 0, -30}, Turret::Turret2),
-		fturets.crearTorreta({ 9+1, 0, -30}, Turret::Turret2),
-
+		fturets.crearTorreta({-9 + 1, 0, -30}, Turret::Turret2),
+		fturets.crearTorreta({-7 + 1, 0, -30}, Turret::Turret2),
+		fturets.crearTorreta({-5 + 1, 0, -30}, Turret::Turret2),
+		fturets.crearTorreta({-3 + 1, 0, -30}, Turret::Turret2),
+		fturets.crearTorreta({-1 + 1, 0, -30}, Turret::Turret2),
+		fturets.crearTorreta({1 + 1, 0, -30}, Turret::Turret2),
+		fturets.crearTorreta({3 + 1, 0, -30}, Turret::Turret2),
+		fturets.crearTorreta({5 + 1, 0, -30}, Turret::Turret2),
+		fturets.crearTorreta({7 + 1, 0, -30}, Turret::Turret2),
+		fturets.crearTorreta({9 + 1, 0, -30}, Turret::Turret2),
 
 	};
 

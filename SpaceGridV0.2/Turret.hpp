@@ -15,8 +15,6 @@
 #include "Nave.hpp"
 #include "Proyectiles.hpp"
 
-
-
 class Turret
 {
 public:
@@ -88,7 +86,7 @@ public:
     }
     void lanzarProyectil (double time){
         glm::vec3 direccion =  glm::rotate(glm::mat4(1.0f), giroy -giroybase, glm::vec3(0.0f, 1.0f, 0.0f)) * glm::vec4(0,0,1,1) ; // { sin(giroy) ,0 , cos(giroy) };
-        std::cout << direccion.x<< ' ' <<direccion.y<< ' ' <<direccion.z <<"\n " ;
+        //std::cout << direccion.x<< ' ' <<direccion.y<< ' ' <<direccion.z <<"\n " ;
         factory->crearProyectil((unsigned)forma , glm::vec3(0,.5,0)+ pos + direccion * 0.5f, direccion,time);
     }
 
@@ -141,9 +139,6 @@ Turret::~Turret()
 {
 }
 
-
-
-
 class FactoryTorretas
 {
 private:
@@ -159,7 +154,7 @@ private:
         glm::vec3(0.03, 0.03, 0.03),
     };
     const std::array<double, 3> girpyIncial = {M_PI, M_PI / 2.0, 0};
-    const std::array<double, 3> frecuencias = {1.0, 0.5, 1.0};
+    const std::array<double, 3> frecuencias = {2.0, 1.0, 2.5};
 
 public:
     FactoryTorretas(GLuint *vao, Nave *nave , FactoryProyectiles * factory)
@@ -184,7 +179,7 @@ public:
             Utils::loadTexture("../modelos-comprobados/turret1.jpg"),
         };
 
-        std::cout << "Cargados modelos y texturas de torretas";
+        std::cout << "[Factory turrets]Cargados modelos y texturas de torretas\n";
     }
 
     Turret crearTorreta(
