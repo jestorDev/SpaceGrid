@@ -3,4 +3,6 @@ Juego en opengl sobre una nave que se mueve en una cauadricula, echo para la cla
 
 
 # Compilar usando:
-g++ *.cpp -lGL -std=c++11 -Wall -lGL -lGLU -lglut -lGLEW -lsoil2-debug -lglfw  `pkg-config --cflags --libs opencv` -o a.out
+
+`g++ *.cpp   -lGL -std=c++11 -Wall -lGL -lGLU -lglut -lGLEW -lsoil2-debug -lglfw -ldl   -o a.out`
+
