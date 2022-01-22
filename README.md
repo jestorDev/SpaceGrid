@@ -1,9 +1,7 @@
 # SpaceGrid
-Game in Opengl / C++ game about a spaceship that moves in a grid space
-Juego en opengl sobre una nave que se mueve en una cauadricula
+Game in Opengl / C++ game about a spaceship that moves in a grid space.
 
-
-# Compile with:
+# Compile in linux with:
 
 `g++ *.cpp   -lGL -std=c++11 -Wall -lGL -lGLU -lglut -lGLEW -lsoil2-debug -lglfw -ldl   -o a.out`
 
